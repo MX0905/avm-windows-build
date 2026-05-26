@@ -1,0 +1,39 @@
+name: Build AVM Windows x64 (Manual)
+
+on:
+  workflow_dispatch:  # 仅手动运行
+
+jobs:
+  build:
+    runs-on: windows-latest
+    name: Build AVM Windows x64 Release
+
+    steps:
+      - name: Checkout AVM repo
+        uses: actions/checkout@v4
+        with:
+          repository: AOMediaCodec/avm
+          fetch-depth: 1
+
+      - name: Install build tools (CMake, Perl, YASM, NASM, Python)
+        run: |
+          choco install cmake perl yasm nasm python -y
+
+      - name: Create build folder
+        run: mkdir build
+
+      - name: CMake configure (VS2022 x64)
+        run: |
+          cd build
+          cmake .. -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build full project (完整编译)
+        run: |
+          cd build
+          cmake --build . --config Release --parallel
+
+      - name: Upload ALL build artifacts (完整打包)
+        uses: actions/upload-artifact@v4
+        with:
+          name: avm-windows-x64-full-build
+          path: build/
